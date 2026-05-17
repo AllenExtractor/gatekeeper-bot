@@ -80,7 +80,7 @@ async def user_is_admin(client: Client, chat_id: int, user_id: int) -> bool:
         [
             "ban", "unban", "mute", "unmute", "kick", "purge",
             "pin", "unpin", "unpinall", "promote", "demote",
-            "warn", "del", "delete", "tban", "tmute", "kick",
+            "warn", "lock", "delete", "unlock", "tmute", "kick",
             "kickme", "warn", "rmwarn", "warns", "clearwarn",
             "report", "filter", "stop", "filters", "start", "help",
         ]
