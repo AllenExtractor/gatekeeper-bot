@@ -1,11 +1,6 @@
-# GateKeeper Bot — Dependencies
+# GateKeeper Bot v2 — Dependencies
 # Python 3.11+ required
 
-# Core Telegram library (latest stable v22.x — async/await support)
 python-telegram-bot[job-queue]==21.10
-
-# Job queue backend (APScheduler — required for job_queue feature)
 APScheduler==3.10.4
-
-# Environment variable loading (optional, for local dev)
 python-dotenv==1.0.1
