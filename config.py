@@ -4,7 +4,7 @@
 # ============================================================
 
 # ── Telegram Bot (BotFather se) ──────────────────────────────
-BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN_HERE"
+BOT_TOKEN = ""
 # Example: "7123456789:AAFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # ── Owner Info ───────────────────────────────────────────────
@@ -12,17 +12,17 @@ OWNER_ID = 0000000000
 # Example: 8446475678
 # Apni ID jaanno: @userinfobot pe /start bhejo
 
-OWNER_USERNAME = "PASTE_YOUR_USERNAME_HERE"
+OWNER_USERNAME = "SmartBoy_ApnaMS"
 # Example: "SmartBoy_ApnaMS"  (@ ke bina)
 
 # ── Userbot Credentials (my.telegram.org se) ─────────────────
-API_ID = 00000000
+API_ID = 38498066
 # Example: 12345678
 
-API_HASH = "PASTE_YOUR_API_HASH_HERE"
+API_HASH = "c9696114751feacdeb1b4487f5839a1a"
 # Example: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
 
-STRING_SESSION = "PASTE_YOUR_STRING_SESSION_HERE"
+STRING_SESSION = "BQJLbxIAxtBZZ0m0fzUFXyY3rK2mQWv5J3Bbc_wbK5TtVXCbExG6DTfMB2eL52wFWWqHJoflYDpcHLA3euVqx6eY73Ow8Bk8BSop3glm2tnEohBLLdXIrLJBHN_NjQIEP7qawU8tT7i4jcXbXL3nDjictGTUHQe_nz_vLtyftelzDusqSRlXtFRS7jHMzvDOz6S_9hPRIZIIttxPZD5yj6M3Ggc03kQlc3zm_coplPEiv4ITVQImjjxjBH5e_ALq_onZrKzCCXx_IuOlpjxTqRKMy37nmLHSxBT04_rC9Z5r74--gCJwleAaEMyZJQG4sTz8JygvFDmaJT1sc3hu9MFMJUm-6gAAAAH5fQ40AQ"
 # Kaise banao:
 #   1. apne PC pe run karo:
 #      pip install pyrogram TgCrypto
