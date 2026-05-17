@@ -4,7 +4,7 @@
 # ============================================================
 
 # ── Telegram Bot (BotFather se) ──────────────────────────────
-BOT_TOKEN = ""
+BOT_TOKEN = "8480689716:AAHB2Mg7RwVf_hCTVhQvzxL9uo92cYzzGYQ"
 # Example: "7123456789:AAFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # ── Owner Info ───────────────────────────────────────────────
