@@ -14,8 +14,8 @@ def build_approval_keyboard(request_id: str) -> InlineKeyboardMarkup:
     """
     keyboard = [
         [
-            InlineKeyboardButton("✅ Yes — Allow", callback_data=f"approve:{request_id}"),
-            InlineKeyboardButton("❌ No — Block", callback_data=f"reject:{request_id}"),
+            InlineKeyboardButton("✅ Yes ", callback_data=f"approve:{request_id}"),
+            InlineKeyboardButton("❌ No ", callback_data=f"reject:{request_id}"),
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
