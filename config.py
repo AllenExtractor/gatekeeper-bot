@@ -8,7 +8,7 @@ BOT_TOKEN = ""
 # Example: "7123456789:AAFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # ── Owner Info ───────────────────────────────────────────────
-OWNER_ID = 0000000000
+OWNER_ID = 8703802029
 # Example: 8446475678
 # Apni ID jaanno: @userinfobot pe /start bhejo
 
