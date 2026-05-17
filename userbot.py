@@ -85,7 +85,7 @@ async def user_is_admin(client: Client, chat_id: int, user_id: int) -> bool:
             "report", "filter", "stop", "filters", "start", "help",
         ]
     )
-    & (filters.group | filters.supergroup)
+    & (filters.group)
     & ~filters.me  # Apne messages intercept mat karo
 )
 async def intercept_any_command(client: Client, message: Message):
