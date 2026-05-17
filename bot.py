@@ -7,8 +7,7 @@ Ye bot sirf ye kaam karta hai:
 2. Owner ke /start /help /status commands handle karna
 3. Userbot se aaye requests execute karna (approve pe)
 
-Command interception ab USERBOT karta hai (userbot.py)
-Userbot MTProto level pe message delete karta hai — Rose se PEHLE.
+Command interception USERBOT karta hai (userbot.py)
 """
 
 import asyncio
@@ -50,9 +49,8 @@ OWNER_ID = config.OWNER_ID
 async def handle_approval_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Owner ne Yes ya No dabaya.
-
-    YES  → execute_approved_command() — task hoga
-    NO   → KUCH NAHI — sirf reject message, executor kabhi nahi chalta
+    YES  → execute_approved_command()
+    NO   → sirf reject — executor kabhi nahi chalta
     """
     query = update.callback_query
     user = update.effective_user
@@ -87,7 +85,6 @@ async def handle_approval_callback(update: Update, context: ContextTypes.DEFAULT
             parse_mode=ParseMode.MARKDOWN,
         )
 
-        # ✅ Sirf YES pe execute hoga
         success, result_msg = await execute_approved_command(context.bot, request_data)
 
         if success:
@@ -95,7 +92,7 @@ async def handle_approval_callback(update: Update, context: ContextTypes.DEFAULT
                 f"✅ *Approved & Executed!*\n\n"
                 f"📋 Command: `{request_data['full_text']}`\n"
                 f"🏠 Group: `{request_data['chat_title']}`\n"
-                f"👤 Admin: {request_data['from_user_name']}\n\n"
+                f"👤 User: {request_data['from_user_name']}\n\n"
                 f"Result: {result_msg}"
             )
         else:
@@ -124,12 +121,11 @@ async def handle_approval_callback(update: Update, context: ContextTypes.DEFAULT
     elif action == "reject":
         logger.info(f"Owner REJECTED: {request_data['full_text']}")
 
-        # ❌ NO pe executor NAHI chalta — bilkul kuch nahi hota
         await query.edit_message_text(
             f"❌ *Rejected!*\n\n"
             f"📋 Command: `{request_data['full_text']}`\n"
             f"🏠 Group: `{request_data['chat_title']}`\n"
-            f"👤 Admin: {request_data['from_user_name']}\n\n"
+            f"👤 User: {request_data['from_user_name']}\n\n"
             f"_Command block kar di gayi — koi action nahi hua._",
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -143,7 +139,6 @@ async def handle_approval_callback(update: Update, context: ContextTypes.DEFAULT
                 ),
                 parse_mode=ParseMode.MARKDOWN,
             )
-            # 30s mein delete
             context.job_queue.run_once(
                 _delete_msg,
                 when=30,
@@ -178,9 +173,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "GateKeeper Bot + Userbot dono active hain.\n\n"
             "✅ PM confirmed — notifications ready.\n\n"
             "📌 *System:*\n"
-            "• Userbot → MTProto se command intercept\n"
+            "• Userbot → MTProto se command intercept (sabhi users)\n"
             "• Bot API → Owner approval handle\n"
-            "• Ye combo MissRose se bhi PEHLE kaam karta hai\n\n"
+            "• Restart pe pending requests safe (file mein save)\n\n"
             "/status — pending requests\n"
             "/help — full guide"
         )
@@ -195,7 +190,7 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat.type != ChatType.PRIVATE:
         return
     if user.id != OWNER_ID:
-        await update.message.reply_text("🤖 GateKeeper Bot — Admin commands owner se approve hoti hain.")
+        await update.message.reply_text("🤖 GateKeeper Bot — Saari commands owner se approve hoti hain.")
         return
 
     text = (
@@ -208,12 +203,13 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/clearall — Saari requests clear\n\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
         "*Intercepted Commands:*\n"
-        "/ban /unban /mute /unmute /kick\n"
-        "/purge /pin /unpin /promote /demote\n"
-        "/warn /del aur baaki saari / commands\n\n"
+        "ban/unban/mute/unmute/kick/purge\n"
+        "pin/unpin/promote/demote/warn\n"
+        "lock/unlock/del/id aur bahut zyada!\n\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
         f"👤 Owner ID: `{OWNER_ID}`\n"
-        f"⏱ Timeout: `{config.REQUEST_TIMEOUT}s`"
+        f"⏱ Timeout: `{config.REQUEST_TIMEOUT}s`\n"
+        f"💾 Persistence: File-based (restart safe)"
     )
     await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
@@ -242,6 +238,7 @@ async def cmd_clearall(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     count = len(store.pending_requests)
     store.pending_requests.clear()
+    store._save_to_disk()
     await update.message.reply_text(f"🗑️ `{count}` requests clear.", parse_mode=ParseMode.MARKDOWN)
 
 
@@ -260,24 +257,6 @@ async def cleanup_job(context: ContextTypes.DEFAULT_TYPE):
             )
         except TelegramError:
             pass
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#   HEALTH CHECK
-# ═══════════════════════════════════════════════════════════════════════════════
-
-class HealthHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"GateKeeper Bot + Userbot is alive!")
-    def log_message(self, *args):
-        pass
-
-
-def start_health_server(port=8000):
-    HTTPServer(("0.0.0.0", port), HealthHandler).serve_forever()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
