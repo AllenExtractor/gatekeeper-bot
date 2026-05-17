@@ -16,7 +16,10 @@ SETUP REQUIRED (environment variables):
 
 import asyncio
 import logging
+import os
 import time
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from telegram import (
     Bot,
@@ -426,9 +429,38 @@ async def cleanup_job(context: ContextTypes.DEFAULT_TYPE):
 #   APPLICATION SETUP & MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#   HEALTH CHECK SERVER — Port 8000 (Render ke liye zaroori)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class HealthHandler(BaseHTTPRequestHandler):
+    """Simple HTTP handler — Render ko yeh port dikhana zaroori hai."""
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"GateKeeper Bot is alive!")
+
+    def log_message(self, format, *args):
+        pass  # HTTP logs suppress karo (spam hoti hai)
+
+
+def start_health_server(port: int = 8000):
+    """Background thread mein HTTP server chalao."""
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    logger.info(f"Health check server started on port {port}")
+    server.serve_forever()
+
+
 def main():
     logger.info("Starting GateKeeper Bot...")
     logger.info(f"Owner ID: {OWNER_ID}")
+
+    # ── Health check server — background thread mein ─────────────────────────
+    port = int(os.environ.get("PORT", 8000))
+    health_thread = threading.Thread(target=start_health_server, args=(port,), daemon=True)
+    health_thread.start()
 
     # Application build karo
     app = (
