@@ -53,9 +53,20 @@ report_results = queue.Queue()
 active_threads = 0
 thread_lock = threading.Lock()
 
+# 8 Professional DSA-style Copyright Report Messages (Singapore English + Legal Tone)
+DSA_MESSAGES = [
+    "This channel is unlawfully distributing paid educational content that is protected by copyright. The content is being shared without permission from the rights holder. Please investigate and take appropriate action.",
+    "This channel appears to be sharing premium course materials without authorization. Such distribution violates copyright laws and Telegram's Terms of Service. Kindly review this channel.",
+    "The channel is engaged in unauthorized sharing of copyrighted educational resources, including paid courses. Please verify the infringement and take necessary enforcement action.",
+    "This channel is providing access to premium learning content that is normally available only through paid subscriptions. The content is being redistributed without permission from the copyright owner.",
+    "I would like to report this channel for copyright infringement. It is distributing protected course content without authorization and potentially causing harm to the content owner.",
+    "This channel is repeatedly uploading and sharing copyrighted premium educational materials. Please review the reported content and take action if it violates Telegram policies.",
+    "The reported channel appears to be operating as a piracy source for paid educational courses. The content is being shared without the consent of the copyright holder.",
+    "This channel is distributing copyrighted premium courses and study materials without authorization. I request that Telegram investigate this matter and take appropriate action if violations are confirmed."
+]
+
 # ASCII Banner with basic colors using ANSI escape codes
 def display_banner():
-    # Check if terminal supports colors
     colors_supported = not IS_WINDOWS or os.environ.get('ANSICON') is not None
     
     if colors_supported:
@@ -73,7 +84,7 @@ def display_banner():
 \033[95m██║  ██║███████╗██║     ╚██████╔╝██║  ██║   ██║   ███████╗██║  ██║
 \033[95m╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
 \033[0m
-\033[96m[+]\033[0m Enhanced Telegram Mass Reporting Tool v4.0
+\033[96m[+]\033[0m Enhanced Telegram Mass Reporting Tool v4.0 (DSA Enhanced)
 \033[96m[+]\033[0m Multi-Entity Support: Accounts, Bots, Channels, Groups
 \033[96m[+]\033[0m Platform: {0}
 """.format("Android/Termux" if IS_ANDROID else "Windows" if IS_WINDOWS else "Linux/Mac")
@@ -92,7 +103,7 @@ def display_banner():
 ██║  ██║███████╗██║     ╚██████╔╝██║  ██║   ██║   ███████╗██║  ██║
 ╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
 
-[+] Enhanced Telegram Mass Reporting Tool v4.0
+[+] Enhanced Telegram Mass Reporting Tool v4.0 (DSA Enhanced)
 [+] Multi-Entity Support: Accounts, Bots, Channels, Groups
 [+] Platform: {0}
 """.format("Android/Termux" if IS_ANDROID else "Windows" if IS_WINDOWS else "Linux/Mac")
@@ -104,7 +115,6 @@ def load_config():
     config = configparser.ConfigParser()
     config_file = "config.ini"
     
-    # Create default config if it doesn't exist
     if not os.path.exists(config_file):
         config['DEFAULT'] = {
             'api_id': '33853339',
@@ -149,26 +159,26 @@ def get_report_reason(reason_code):
     }
     return reasons.get(reason_code, reasons[1])
 
+# Get random DSA copyright message
+def get_random_dsa_message():
+    return random.choice(DSA_MESSAGES)
+
 # Extract entity type and ID from link
 def extract_entity_info(link):
-    # Channel or group post
     channel_post_match = re.search(r"https?://t\.me/([^/]+)/(\d+)", link)
     if channel_post_match:
         return "channel_post", channel_post_match.group(1), int(channel_post_match.group(2))
     
-    # Channel, group or bot
     channel_match = re.search(r"https?://t\.me/([^/]+)$", link)
     if channel_match:
         username = channel_match.group(1)
         return "entity", username, None
     
-    # Private chat link
     private_match = re.search(r"https?://t\.me/\+([a-zA-Z0-9_-]+)$", link)
     if private_match:
         invite_code = private_match.group(1)
         return "private", invite_code, None
     
-    # User by ID
     user_id_match = re.search(r"tg://user\?id=(\d+)", link)
     if user_id_match:
         return "user", int(user_id_match.group(1)), None
@@ -192,6 +202,8 @@ def setup_proxy(client, config):
         
         client.proxy = proxy
         logging.info(f"Using {proxy_type} proxy: {proxy['hostname']}:{proxy['port']}")
+    else:
+        logging.info("Using real user IP")
 
 # Simple progress bar implementation
 def print_progress_bar(iteration, total, prefix='', suffix='', length=50, fill='█'):
@@ -212,21 +224,23 @@ def get_random_delay(config):
     else:
         return config.getfloat('delay_between_reports')
 
-# Report channel post
-def report_channel_post(app, peer, message_id, reason_obj, reason_name):
+# Updated Report channel post with random DSA message
+def report_channel_post(app, peer, message_id, reason_obj, reason_name, entity_name):
+    message = get_random_dsa_message()
     return app.invoke(Report(
         peer=peer,
         id=[message_id],
         reason=reason_obj,
-        message=f"This message contains {reason_name.lower()} content."
+        message=message
     ))
 
-# Report entire channel/group/bot
-def report_entity(app, peer, reason_obj, reason_name):
+# Updated Report entire channel/group/bot with random DSA message
+def report_entity(app, peer, reason_obj, reason_name, entity_name):
+    message = get_random_dsa_message()
     return app.invoke(ReportPeer(
         peer=peer,
         reason=reason_obj,
-        message=f"This entity contains {reason_name.lower()} content."
+        message=message
     ))
 
 # Report spam for channel
@@ -270,7 +284,6 @@ def report_with_account(session_name, config, entity_type, entity_id, message_id
     with thread_lock:
         active_threads += 1
     
-    # Set up asyncio event loop for this thread
     loop = setup_asyncio_for_thread()
     if not loop:
         with thread_lock:
@@ -289,13 +302,11 @@ def report_with_account(session_name, config, entity_type, entity_id, message_id
     error_message = None
     
     try:
-        # Create client
         app = Client(session_name, api_id, api_hash)
         setup_proxy(app, config)
         
         with app:
             try:
-                # Resolve peer based on entity type
                 if entity_type == "channel_post" or entity_type == "entity":
                     if isinstance(entity_id, int):
                         peer = app.resolve_peer(entity_id)
@@ -320,7 +331,6 @@ def report_with_account(session_name, config, entity_type, entity_id, message_id
                     entity_name = f"User {entity_id}"
                 
                 elif entity_type == "private":
-                    # For private chats with invite links, we need to join first
                     try:
                         chat = app.join_chat(f"https://t.me/+{entity_id}")
                         peer = app.resolve_peer(chat.id)
@@ -341,42 +351,35 @@ def report_with_account(session_name, config, entity_type, entity_id, message_id
                 print(f"\033[91m[!]\033[0m [{session_name}] Failed to resolve peer: {e}")
                 raise
             
-            # Join the channel if it's a channel and auto_join is enabled
             if entity_type == "channel_post" and hasattr(peer, 'channel_id') and config.getboolean('auto_leave', True):
                 try:
                     app.invoke(JoinChannel(channel=peer))
                     logging.info(f"[{session_name}] Joined {entity_name}")
                     print(f"\033[96m[+]\033[0m [{session_name}] Joined {entity_name}")
-                    # Add random delay after joining to avoid detection
                     time.sleep(random.uniform(1.0, 3.0))
                 except Exception as e:
                     logging.error(f"[{session_name}] Join failed: {e}")
                     print(f"\033[91m[!]\033[0m [{session_name}] Join failed: {e}")
             
-            # Get report reason
             reason_name, reason_obj = get_report_reason(reason_code)
             
-            # Send reports
             retry_attempts = config.getint('retry_attempts')
             
-            print(f"\033[96m[+]\033[0m [{session_name}] Starting to send {total_reports} reports for {entity_name}...")
+            print(f"\033[96m[+]\033[0m [{session_name}] Starting to send {total_reports} enhanced DSA reports for {entity_name}...")
             
             for i in range(total_reports):
                 for attempt in range(retry_attempts):
                     try:
-                        # Different reporting methods based on entity type
                         if entity_type == "channel_post":
-                            report_channel_post(app, input_peer, message_id, reason_obj, reason_name)
-                            # Also report the channel as spam occasionally for better effect
-                            if random.random() < 0.3:  # 30% chance
+                            report_channel_post(app, input_peer, message_id, reason_obj, reason_name, entity_name)
+                            if random.random() < 0.3:
                                 try:
                                     report_channel_spam(app, peer)
                                 except Exception:
                                     pass
                         elif entity_type in ["entity", "user", "private"]:
-                            report_entity(app, input_peer, reason_obj, reason_name)
-                            # Also report as spam
-                            if random.random() < 0.5:  # 50% chance
+                            report_entity(app, input_peer, reason_obj, reason_name, entity_name)
+                            if random.random() < 0.5:
                                 try:
                                     if hasattr(peer, 'channel_id'):
                                         report_channel_spam(app, peer)
@@ -391,7 +394,6 @@ def report_with_account(session_name, config, entity_type, entity_id, message_id
                                           suffix=f'Complete ({i+1}/{total_reports})', 
                                           length=30)
                         
-                        # Random delay between reports to avoid detection
                         delay = get_random_delay(config)
                         time.sleep(delay)
                         break
@@ -407,7 +409,6 @@ def report_with_account(session_name, config, entity_type, entity_id, message_id
             print(f"\033[92m[+]\033[0m [{session_name}] Successfully sent {success_count}/{total_reports} reports")
             logging.info(f"[{session_name}] Successfully sent {success_count}/{total_reports} reports")
             
-            # Leave the channel if it's a channel and auto_leave is enabled
             if (entity_type == "channel_post" or entity_type == "private") and hasattr(peer, 'channel_id') and config.getboolean('auto_leave', True):
                 try:
                     app.invoke(LeaveChannel(channel=peer))
@@ -424,14 +425,11 @@ def report_with_account(session_name, config, entity_type, entity_id, message_id
         print(f"\033[91m[!]\033[0m Error in session {session_name}: {e}")
     
     finally:
-        # Clean up asyncio event loop
         cleanup_asyncio_loop(loop)
         
-        # Update thread count
         with thread_lock:
             active_threads -= 1
         
-        # Report results
         report_results.put({
             'session': session_name,
             'success': success_count > 0,
@@ -451,7 +449,6 @@ def check_sessions(session_prefix, num_accounts):
 
 # Create new session
 def create_session(session_name, config):
-    # Set up asyncio event loop for this thread
     loop = setup_asyncio_for_thread()
     if not loop:
         print(f"\033[91m[!]\033[0m Failed to set up asyncio loop for session creation")
@@ -476,7 +473,6 @@ def create_session(session_name, config):
         print(f"\033[91m[!]\033[0m Failed to create session {session_name}: {e}")
         return False
     finally:
-        # Clean up asyncio event loop
         cleanup_asyncio_loop(loop)
 
 # Handle keyboard interrupt
@@ -511,20 +507,16 @@ def load_target_list(filename="targets.json"):
         return []
 
 def main():
-    # Set up signal handler for clean exit
     signal.signal(signal.SIGINT, signal_handler)
     
     display_banner()
     config = load_config()
     
-    # Check for Android-specific setup
     if IS_ANDROID:
         print(f"\033[93m[!]\033[0m Running on Android/Termux. Optimizing for mobile environment...")
-        # Reduce memory usage for Android
         if config.getboolean('memory_optimization', True):
             print(f"\033[96m[+]\033[0m Memory optimization enabled for mobile devices")
     
-    # Get user input
     print(f"\033[96m[+]\033[0m Select target type:")
     print(f"\033[96m[1]\033[0m Channel/Group Post")
     print(f"\033[96m[2]\033[0m Channel/Group/Bot")
@@ -565,7 +557,6 @@ def main():
             print(f"\033[91m[!]\033[0m Failed to parse the provided link or ID")
             return
         
-        # Display report reason options
         print("\n\033[93m[!]\033[0m Available report reasons:")
         print("\033[96m[1]\033[0m Violence")
         print("\033[96m[2]\033[0m Pornography")
@@ -579,7 +570,6 @@ def main():
         
         reason_code = int(input("\n\033[96m[?]\033[0m Select report reason (1-9): "))
         
-        # Add to targets list
         targets.append({
             'entity_type': entity_type,
             'entity_id': entity_id,
@@ -587,16 +577,13 @@ def main():
             'reason_code': reason_code
         })
         
-        # Ask if user wants to save this target
         save_target = input("\033[96m[?]\033[0m Save this target for future use? (y/n): ").lower() == 'y'
         if save_target:
             save_target_list(targets)
     
-    # Get number of accounts and reports
     num_accounts = int(input("\033[96m[?]\033[0m Number of accounts to use: "))
     reports_per_account = int(input("\033[96m[?]\033[0m Reports per account: "))
     
-    # Check for existing sessions
     session_prefix = config.get('session_prefix')
     existing_sessions = check_sessions(session_prefix, num_accounts)
     
@@ -616,7 +603,6 @@ def main():
                 print(f"\033[91m[!]\033[0m No sessions available. Exiting.")
                 return
     
-    # Process each target
     for target_idx, target in enumerate(targets):
         print(f"\n\033[96m[+]\033[0m Processing target {target_idx + 1}/{len(targets)}")
         
@@ -625,7 +611,6 @@ def main():
         message_id = target['message_id']
         reason_code = target['reason_code']
         
-        # Create and start threads for each account
         threads = []
         for i in range(1, num_accounts + 1):
             session_name = f"{session_prefix}_{i}"
@@ -636,14 +621,11 @@ def main():
                 )
                 threads.append(thread)
                 thread.start()
-                # Small delay between starting threads to avoid API rate limits
                 time.sleep(0.5)
         
-        # Wait for all threads to complete
         while active_threads > 0:
             time.sleep(0.5)
         
-        # Process results
         total_reports = 0
         failed_sessions = []
         
@@ -656,13 +638,11 @@ def main():
         print(f"\n\033[92m[+]\033[0m Target {target_idx + 1} reporting completed!")
         print(f"\033[96m[i]\033[0m Total reports sent: {total_reports}")
         
-        # Handle failed sessions
         if failed_sessions:
             print(f"\033[93m[!]\033[0m {len(failed_sessions)} sessions failed:")
             for session, error in failed_sessions:
                 print(f"\033[91m[-]\033[0m {session}: {error}")
             
-            # Ask if user wants to retry failed sessions
             retry_count = config.getint('session_retry_count')
             if retry_count > 0:
                 retry = input(f"\033[96m[?]\033[0m Retry failed sessions? (y/n): ").lower() == 'y'
@@ -670,7 +650,6 @@ def main():
                     for retry_attempt in range(retry_count):
                         if not failed_sessions:
                             break
-                            
                         print(f"\033[96m[+]\033[0m Retry attempt {retry_attempt + 1}/{retry_count}")
                         retry_delay = config.getint('session_retry_delay')
                         time.sleep(retry_delay)
@@ -678,7 +657,6 @@ def main():
                         current_failed = failed_sessions.copy()
                         failed_sessions = []
                         
-                        # Start retry threads
                         retry_threads = []
                         for session, _ in current_failed:
                             thread = threading.Thread(
@@ -689,11 +667,9 @@ def main():
                             thread.start()
                             time.sleep(0.5)
                         
-                        # Wait for retry threads to complete
                         while active_threads > 0:
                             time.sleep(0.5)
                         
-                        # Process retry results
                         retry_reports = 0
                         while not report_results.empty():
                             result = report_results.get()
